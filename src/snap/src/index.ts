@@ -26,21 +26,46 @@ async function simul(from:string, to:string, value:string, data:string){
   };
   
   const res = await fetch('https://eth-goerli.g.alchemy.com/v2/gh4d1-dAT4B_1Khy86s7JUbFhQIclYqO', options)
-  return res.text();
+  return res;
+}
+
+async function generateResult(tokens: any){
+  let result = ``
+  tokens = JSON.parse(tokens);
+  tokens.forEach((token: any) => {
+    result += `\n${token.amount} ${token.symbol} ${token.changeType} from ${token.from.toString().slice(0,5)} to ${token.to.toString().slice(0,5)}\n`;
+  });
+  return result;
 }
 
 export const onTransaction : OnTransactionHandler = async({ transaction,chainId }) => {
 
   const{from, to, value, data} = transaction;
-  return simul(from,to,value,data).then((txdetails) => {
-    const res = JSON.parse(txdetails);
-    return {
-      insights:{
-        transaction,
-        chainId,
-        message:`${res}`,
+  return simul(from,to,value,data).then(async (txdetails) => {
+    const res = await txdetails.json();
+    const tokens = JSON.stringify(res.result.changes);
+    const error = JSON.stringify(res.result.error);
+
+    if(error !== null){
+      return {
+        insights:{
+          message: 
+            `API Limit reached, please try again later`,
+        }
       }
     }
+    else{
+      let tokenchange = await generateResult(tokens);
+      return {
+        insights:{
+          message: `${tokenchange}`,
+        }
+      }
+    }
+
+    
+
+    
   });
 
  
