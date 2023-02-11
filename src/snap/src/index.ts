@@ -25,7 +25,7 @@ async function simul(from:string, to:string, value:string, data:string){
  )
   };
   
-  const res = await fetch('https://eth-goerli.g.alchemy.com/v2/gh4d1-dAT4B_1Khy86s7JUbFhQIclYqO', options)
+  const res = await fetch('https://polygon-mumbai.g.alchemy.com/v2/vHwfpZ6rtiUnZ1cRnhf1TDCPkXPrypOv', options)
   return res;
 }
 
@@ -33,7 +33,7 @@ async function generateResult(tokens: any){
   let result = ``
   tokens = JSON.parse(tokens);
   tokens.forEach((token: any) => {
-    result += `\n${token.amount} ${token.symbol} ${token.changeType} from ${token.from.toString().slice(0,5)} to ${token.to.toString().slice(0,5)}\n`;
+    result += `\n${Number(token.amount).toFixed(2)} ${token.symbol} ${token.changeType} from ${token.from.toString().slice(0,5)} to ${token.to.toString().slice(0,5)}\n`;
   });
   return result;
 }
@@ -46,27 +46,21 @@ export const onTransaction : OnTransactionHandler = async({ transaction,chainId 
     const tokens = JSON.stringify(res.result.changes);
     const error = JSON.stringify(res.result.error);
 
-    if(error !== null){
-      return {
-        insights:{
-          message: 
-            `API Limit reached, please try again later`,
-        }
-      }
-    }
-    else{
+    
+    if(error === "null"){
       let tokenchange = await generateResult(tokens);
       return {
         insights:{
           message: `${tokenchange}`,
         }
       }
-    }
-
-    
-
-    
+    }else{
+      return {
+        insights:{
+          message: 
+            `${error} : API Limit reached, please try again later`,
+        }
+      }
+    }  
   });
-
- 
 };
