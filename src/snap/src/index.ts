@@ -1,45 +1,47 @@
-import { OnRpcRequestHandler } from '@metamask/snap-types';
 import { OnTransactionHandler } from "@metamask/snap-types";
 
+async function getgasfees(){
+  const response = await fetch('https://beaconcha.in/api/v1/execution/gasnow');
+  return response.text();
+}
 
-/**
- * Get a message from the origin. For demonstration purposes only.
- *
- * @param originString - The origin string.
- * @returns A message based on the origin.
- */
-export const getMessage = (originString: string): string =>
-  `Hello, ${originString}!`;
+async function simul(from:string, to:string, value:string, data:string){
+  const options = {
+    method: 'POST',
+    headers: {accept: 'application/json', 'content-type': 'application/json'},
+    body: JSON.stringify({
+      "id": 1,
+      "jsonrpc": "2.0",
+      "method": "alchemy_simulateAssetChanges",
+      "params": [
+           {
+                "from": `${from}`,
+                "to": `${to}`,
+                "value": `${value}`,
+                "data": `${data}`
+           }
+      ]
+ }
+ )
+  };
+  
+  const res = await fetch('https://eth-goerli.g.alchemy.com/v2/gh4d1-dAT4B_1Khy86s7JUbFhQIclYqO', options)
+  return res.text();
+}
 
-/**
- * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
- *
- * @param args - The request handler args as object.
- * @param args.origin - The origin of the request, e.g., the website that
- * invoked the snap.
- * @param args.request - A validated JSON-RPC request object.
- * @returns `null` if the request succeeded.
- * @throws If the request method is not valid for this snap.
- * @throws If the `snap_confirm` call failed.
- */
-export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
-  switch (request.method) {
-    case 'hello':
-      return wallet.request({
-        method: 'snap_confirm',
-        params: [
-          {
-            prompt: getMessage(origin),
-            description:
-              'This is Hello Snap',
-            textAreaContent:
-              'But you can edit the snap source code to make it do something, if you want to!',
-          },
-        ],
-      });
-    default:
-      throw new Error('Method not found.');
-  }
+export const onTransaction : OnTransactionHandler = async({ transaction,chainId }) => {
+
+  const{from, to, value, data} = transaction;
+  return simul(from,to,value,data).then((txdetails) => {
+    const res = JSON.parse(txdetails);
+    return {
+      insights:{
+        transaction,
+        chainId,
+        message:`${res}`,
+      }
+    }
+  });
+
+ 
 };
-
-

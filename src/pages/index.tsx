@@ -48,8 +48,6 @@ export default function Home() {
     });
   };
 
-  const txdata = onTransaction(config);
-
   return (
     <>
       <Head>

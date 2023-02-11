@@ -50,28 +50,55 @@
       Object.defineProperty(exports, "__esModule", {
         value: true
       });
-      exports.onRpcRequest = exports.getMessage = void 0;
-      const getMessage = originString => `Hello, ${originString}!`;
-      exports.getMessage = getMessage;
-      const onRpcRequest = ({
-        origin,
-        request
+      exports.onTransaction = void 0;
+      async function getgasfees() {
+        const response = await fetch('https://beaconcha.in/api/v1/execution/gasnow');
+        return response.text();
+      }
+      async function simul(from, to, value, data) {
+        const options = {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": "alchemy_simulateAssetChanges",
+            "params": [{
+              "from": `${from}`,
+              "to": `${to}`,
+              "value": `${value}`,
+              "data": `${data}`
+            }]
+          })
+        };
+        const res = await fetch('https://eth-goerli.g.alchemy.com/v2/gh4d1-dAT4B_1Khy86s7JUbFhQIclYqO', options);
+        return res.text();
+      }
+      const onTransaction = async ({
+        transaction,
+        chainId
       }) => {
-        switch (request.method) {
-          case 'hello':
-            return wallet.request({
-              method: 'snap_confirm',
-              params: [{
-                prompt: getMessage(origin),
-                description: 'This is Hello Snap',
-                textAreaContent: 'But you can edit the snap source code to make it do something, if you want to!'
-              }]
-            });
-          default:
-            throw new Error('Method not found.');
-        }
+        const {
+          from,
+          to,
+          value,
+          data
+        } = transaction;
+        return simul(from, to, value, data).then(txdetails => {
+          const res = JSON.parse(txdetails);
+          return {
+            insights: {
+              transaction,
+              chainId,
+              message: `${res}`
+            }
+          };
+        });
       };
-      exports.onRpcRequest = onRpcRequest;
+      exports.onTransaction = onTransaction;
     }, {}]
   }, {}, [1])(1);
 });
