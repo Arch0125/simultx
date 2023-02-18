@@ -6,16 +6,14 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useSendTransaction, usePrepareSendTransaction } from "wagmi";
 import { onTransaction } from "@/snap/src";
 import Notifications from "@/utils/Notifications";
+import GetAccount from "@/utils/GetAccount";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   const defaultSnapOrigin = `local:http://localhost:3000`;
-  const { config } = usePrepareSendTransaction({
-    request: { to: "0xC5Db59D48700B6bC8D53cE773b21931d986DEa0E", value: "10" },
-  });
-  const { data, isLoading, isSuccess, sendTransaction } =
-    useSendTransaction(config);
+  
+  const addr = GetAccount();
 
   const sendHello = async () => {
     const res1 = await window.ethereum.request({
@@ -30,6 +28,7 @@ export default function Home() {
       const notifres = await Notifications(
         `A Transaction request has been made from ${res1?.origin}`,
         `The OTP for Transaction approval is ${number}`,
+        addr?.toString() || '0x0000000'
       )
       const res2 = await window.ethereum.request({
         method: "wallet_invokeSnap",
@@ -74,6 +73,7 @@ export default function Home() {
       </Head>
       <div>
         <ConnectButton />
+        <p className={styles.description}>Your Address: {addr}</p>
         <button onClick={() => connectSnap()}>Connect Snap</button>
         <button onClick={() => sendHello()}>Send Hello</button>
         <button onClick={() => signTx()}>Send Transaction</button>
