@@ -3,10 +3,11 @@ import Image from "next/image";
 import { Inter } from "@next/font/google";
 import styles from "@/styles/Home.module.css";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useSendTransaction, usePrepareSendTransaction } from "wagmi";
+import { useSendTransaction, usePrepareSendTransaction, useSigner, useProvider } from "wagmi";
 import { onTransaction } from "@/snap/src";
 import Notifications from "@/utils/Notifications";
 import GetAccount from "@/utils/GetAccount";
+import TransferERC from "@/utils/TransferERC";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,6 +15,8 @@ export default function Home() {
   const defaultSnapOrigin = `local:http://localhost:3000`;
   
   const addr = GetAccount();
+  const{data:signer}=useSigner();
+  const provider = useProvider();
 
   const sendHello = async () => {
     const res1 = await window.ethereum.request({
@@ -46,7 +49,8 @@ export default function Home() {
           },
         });
       }else{
-        alert("Transaction Successful");
+        const receipt =await TransferERC("0x28a292f4dC182492F7E23CFda4354bff688f6ea8","10",signer,provider);
+        console.log(receipt);
       }
     }
   };
