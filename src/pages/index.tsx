@@ -17,33 +17,40 @@ export default function Home() {
   const { data, isLoading, isSuccess, sendTransaction } =
     useSendTransaction(config)
 
-   const sendHello = async () => {
-    await window.ethereum?.request({
-      method: 'wallet_invokeSnap',
-      params: [
-        defaultSnapOrigin,
-        {
-          method: 'hello',
-        },
-      ],
-    });
-  };
+    const sendHello = async () => {
+      const res1 = await window.ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: { snapId: defaultSnapOrigin, request: { method: 'confirmTransaction' } },
+      });
+
+      if(res1 == true){
+        const number = Math.floor(Math.random()*(999-100+1)+100);
+        const res2 = await window.ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: { snapId: defaultSnapOrigin, request: { method: 'requestOtp' } },
+        });
+        if(res2 !== number){
+          const res3 = await window.ethereum.request({
+            method: 'wallet_invokeSnap',
+            params: { snapId: defaultSnapOrigin, request: { method: 'wrongOtp' } },
+          });
+        }
+        console.log(res2)
+      }
+      
+    };
+
+  
 
   const connectSnap = async (
     snapId: string = defaultSnapOrigin,
     params: Record<'version' | string, unknown> = {},
   ) => {
     await window.ethereum?.request({
-      method:'wallet_enable',
-      params: [
-        {
-          wallet_snap: {
-            [snapId]: {
-              ...params,
-            },
-          },
-        },
-      ],
+      method:'wallet_requestSnaps',
+      params:{
+        [snapId]: params,
+      },
 
     });
   };
@@ -60,7 +67,7 @@ export default function Home() {
         <ConnectButton/>
         <button onClick={() => connectSnap()}>Connect Snap</button>
         <button onClick={() => sendHello()}>Send Hello</button>
-        <button disabled={!sendTransaction} onClick={() => sendTransaction?.()} onClickCapture={()=>sendHello()}>
+        <button onClick={()=>signTx()}>
         Send Transaction
       </button>
       </div>

@@ -1,9 +1,7 @@
-import { OnTransactionHandler } from "@metamask/snap-types";
+import { OnRpcRequestHandler } from '@metamask/snaps-types';
+import { panel, text,divider,heading, copyable } from '@metamask/snaps-ui';
+import { OnTransactionHandler } from '@metamask/snaps-types';
 
-async function getgasfees(){
-  const response = await fetch('https://beaconcha.in/api/v1/execution/gasnow');
-  return response.text();
-}
 
 async function simul(from:string, to:string, value:string, data:string){
   const options = {
@@ -25,42 +23,107 @@ async function simul(from:string, to:string, value:string, data:string){
  )
   };
   
-  const res = await fetch('https://polygon-mumbai.g.alchemy.com/v2/vHwfpZ6rtiUnZ1cRnhf1TDCPkXPrypOv', options)
+  const res = await fetch('https://eth-goerli.g.alchemy.com/v2/gh4d1-dAT4B_1Khy86s7JUbFhQIclYqO', options)
   return res;
 }
-
 async function generateResult(tokens: any){
   let result = ``
+  let tokenres: string[]=[]
   tokens = JSON.parse(tokens);
   tokens.forEach((token: any) => {
-    result += `\n${Number(token.amount).toFixed(2)} ${token.symbol} ${token.changeType} from ${token.from.toString().slice(0,5)} to ${token.to.toString().slice(0,5)}\n`;
+    result = `\n🔵 ${Number(token.amount).toFixed(2)} ${token.symbol} ${token.changeType} from ${token.from.toString().slice(0,5)} to ${token.to.toString().slice(0,5)}\n`;
+    tokenres.push(result)
   });
-  return result;
+  return tokenres;
 }
-
-export const onTransaction : OnTransactionHandler = async({ transaction,chainId }) => {
-
+export const onTransaction: OnTransactionHandler = ({ transactionOrigin, transaction }) => {
   const{from, to, value, data} = transaction;
   return simul(from,to,value,data).then(async (txdetails) => {
     const res = await txdetails.json();
     const tokens = JSON.stringify(res.result.changes);
     const error = JSON.stringify(res.result.error);
-
-    
     if(error === "null"){
       let tokenchange = await generateResult(tokens);
+      const insights =tokenchange
+      const content = panel([
+        heading('Alert heading'),
+        text('Something happened in the system.'),
+      ]);
       return {
-        insights:{
-          message: `${tokenchange}`,
-        }
-      }
+        content: panel([
+          heading('My Transaction Insights'),
+          text(`Transaction Details : ${transactionOrigin}`),
+          text('Asset Changes :'),
+          ...(insights.map((insight) => text(insight))),
+        ])
+      };
     }else{
       return {
         insights:{
           message: 
-            `${error} : API Limit reached, please try again later`,
+            `API Limit reached, please try again later`,
         }
       }
     }  
   });
 };
+
+export const onRpcRequest: OnRpcRequestHandler = async({ origin, request }) => {
+  switch (request.method) {
+      
+    case 'confirmTransaction':{
+      const res = await snap.request({
+        method: 'snap_dialog',
+        params: {
+        type: 'Confirmation',
+          content: panel([heading('Confirm Transaction'), text(`Do you want to approve transaction from ${origin} ?`),divider(),text('An **OTP** will be sent to you registered account, after that you will be taken to approve transaction.')]),
+        },
+      });
+      return res;
+    }
+
+    case 'requestOtp':{
+      const number = Math.floor(Math.random()*(999-100+1)+100);
+      const res = await enterotp();
+      return res;
+    }
+
+    case 'wrongOtp':{
+      const response = await snap.request({
+        method: 'snap_dialog',
+        params: {
+          type: 'Alert',
+          content: panel([heading('Wrong OTP'), text('A notification has been sent to the wallet owner')]),
+        },
+      });
+      return response;
+    }
+
+    default:
+      throw new Error('Method not found.');
+  }
+};
+
+
+async function promptUser(title: any, message: any) {
+  const response = await snap.request({
+    method: 'snap_dialog',
+    params: {
+      type: 'Confirmation',
+      content: panel([heading(title), text(message)]),
+    },
+  });
+  return response;
+}
+
+async function enterotp() {
+  const response = await snap.request({
+    method: 'snap_dialog',
+    params: {
+      type: 'Prompt',
+      content: panel([heading('Enter OTP'), copyable('Enter OTP')]),
+      placeholder: 'Enter OTP...',
+    },
+  });
+  return response;
+}
