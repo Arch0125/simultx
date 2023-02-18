@@ -8,11 +8,14 @@ import { onTransaction } from "@/snap/src";
 import Notifications from "@/utils/Notifications";
 import GetAccount from "@/utils/GetAccount";
 import TransferERC from "@/utils/TransferERC";
+import { useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   const defaultSnapOrigin = `local:http://localhost:3000`;
+  const[receiver,setReceiver]=useState<string>("");
+  const[amount,setAmount]=useState<string>("");
   
   const addr = GetAccount();
   const{data:signer}=useSigner();
@@ -49,7 +52,7 @@ export default function Home() {
           },
         });
       }else{
-        const receipt =await TransferERC("0x28a292f4dC182492F7E23CFda4354bff688f6ea8","10",signer,provider);
+        const receipt =await TransferERC(receiver,amount,signer,provider);
         console.log(receipt);
       }
     }
@@ -75,12 +78,30 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div>
+      <div className="flex flex-col h-screen w-screen">
+        <div className="flex flex-row justify-between items-center h-fit p-5 w-full border-b-2 border-white">
+          <p className="text-3xl font-bold">Safe <span className="text-violet-600">Snap</span></p>
         <ConnectButton />
-        <p className={styles.description}>Your Address: {addr}</p>
-        <button onClick={() => connectSnap()}>Connect Snap</button>
+        </div>
+        <div className="grid grid-cols-3 gap-7 m-7 ">
+          <div className="flex flex-col h-fit p-3 border-[1px] border-white rounded-xl" >
+            <p className="text-3xl mb-2 font-bold">Connect </p>
+            <p className={styles.description}>Get started by connecting installing snap in your metamask</p>
+            <button onClick={() => connectSnap()} className="bg-white text-black px-4 py-2 rounded-xl font-medium mt-3" >🦊 Connect Snap</button>
+          </div>
+          <div className="flex flex-col h-fit p-3 border-[1px] border-white rounded-xl" >
+            <p className="text-3xl mb-2 font-bold">Notifications </p>
+            <p className={styles.description}>Opt in PUSH Channel for getting onchain OTP for extra layer of security</p>
+            <button onClick={() => connectSnap()} className="bg-white text-black px-4 py-2 rounded-xl font-medium mt-3" >🔔 Opt In</button>
+          </div>
+          <div className="flex flex-col h-fit p-3 border-[1px] border-white rounded-xl" >
+            <p className="text-3xl mb-2 font-bold">Send Transaction </p>
+            <input onChange={(e)=>setReceiver(e.target.value)} type="text" className="border-[1px] border-white rounded-xl px-3 py-2 w-full mb-3" placeholder="Enter Address" />
+            <input onChange={(e)=>setAmount(e.target.value)} type="text" className="border-[1px] border-white rounded-xl px-3 py-2 w-full mb-3" placeholder="Enter Amount" />
+            <button onClick={() => sendHello()} className="bg-white text-black px-4 py-2 rounded-xl font-medium mt-3" >💸 Send</button>
+          </div>
         <button onClick={() => sendHello()}>Send Hello</button>
-        <button onClick={() => signTx()}>Send Transaction</button>
+        </div>
       </div>
     </>
   );
