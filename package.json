@@ -12,6 +12,7 @@
     "@metamask/snaps-types": "^0.29.0",
     "@metamask/snaps-ui": "^0.29.0",
     "@next/font": "13.1.6",
+    "@pushprotocol/restapi": "^0.6.1",
     "@rainbow-me/rainbowkit": "^0.8.1",
     "@types/node": "18.13.0",
     "@types/react": "18.0.27",

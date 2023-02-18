@@ -6429,10 +6429,13 @@
                 method: 'snap_dialog',
                 params: {
                   type: 'Confirmation',
-                  content: (0, _snapsUi.panel)([(0, _snapsUi.heading)('Confirm Transaction'), (0, _snapsUi.text)(`Do you want to approve transaction from ${origin} ?`), (0, _snapsUi.divider)(), (0, _snapsUi.text)('An **OTP** will be sent to you registered account, after that you will be taken to approve transaction.')])
+                  content: (0, _snapsUi.panel)([(0, _snapsUi.heading)('Confirm Transaction'), (0, _snapsUi.text)(`Do you want to approve transaction from ${origin} ?`), (0, _snapsUi.divider)(), (0, _snapsUi.text)('An **OTP** will be sent to you registered account via PUSH, after that you will be taken to approve transaction.')])
                 }
               });
-              return res;
+              return {
+                res,
+                origin
+              };
             }
           case 'requestOtp':
             {

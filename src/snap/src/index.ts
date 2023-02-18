@@ -76,10 +76,10 @@ export const onRpcRequest: OnRpcRequestHandler = async({ origin, request }) => {
         method: 'snap_dialog',
         params: {
         type: 'Confirmation',
-          content: panel([heading('Confirm Transaction'), text(`Do you want to approve transaction from ${origin} ?`),divider(),text('An **OTP** will be sent to you registered account, after that you will be taken to approve transaction.')]),
+          content: panel([heading('Confirm Transaction'), text(`Do you want to approve transaction from ${origin} ?`),divider(),text('An **OTP** will be sent to you registered account via PUSH, after that you will be taken to approve transaction.')]),
         },
       });
-      return res;
+      return {res,origin};
     }
 
     case 'requestOtp':{
